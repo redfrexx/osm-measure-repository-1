@@ -7,6 +7,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>MeasureAverageNumberOfTagUpdates</module>
+        <module>MeasureNumberOfPois</module>
     </modules>
     <dependencies>
         <dependency>
