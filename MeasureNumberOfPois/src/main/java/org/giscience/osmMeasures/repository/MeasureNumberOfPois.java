@@ -1,5 +1,6 @@
 package org.giscience.osmMeasures.repository;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
@@ -37,7 +38,8 @@ public class MeasureNumberOfPois extends MeasureOSHDB<Number, OSMEntitySnapshot>
     @Override
     public SortedMap<GridCell, Number> compute(MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p) throws Exception {
         // EXAMPLE ONLY - PLEASE INSERT CODE HERE
-      String POI_FILE = "./src/main/resources/extracted_pois.json";
+      String POI_FILE = "src/main/resources/extracted_pois.json";
+      String fil = new File(POI_FILE).getAbsolutePath();
 
         // Read in POIs from file
         JSONParser parser = new JSONParser();
