@@ -8,6 +8,7 @@
     <modules>
         <module>MeasureAverageNumberOfTagUpdates</module>
         <module>MeasureNumberOfPois</module>
+        <module>MeasureResidentialRoads</module>
     </modules>
     <dependencies>
         <dependency>
