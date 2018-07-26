@@ -1,5 +1,6 @@
 package org.giscience.osmMeasures.repository;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
 import org.giscience.measures.tools.Cast;
@@ -8,6 +9,9 @@ import org.giscience.measures.tools.Lineage;
 import org.giscience.utils.geogrid.cells.GridCell;
 import org.heigit.bigspatialdata.oshdb.api.db.OSHDBJdbc;
 import org.heigit.bigspatialdata.oshdb.api.generic.OSHDBCombinedIndex;
+import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBiFunction;
+import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBinaryOperator;
+import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableSupplier;
 import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
 import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 
@@ -44,11 +48,38 @@ public class MeasureResidentialRoads extends MeasureOSHDB<Number, OSMEntitySnaps
         OSHDBTag tag = tagTranslator.getOSHDBTagOf("highway", "residential");
 
         // EXAMPLE ONLY - PLEASE INSERT CODE HERE
-        return Cast.result(mapReducer
-            .osmEntityFilter(x -> x.hasTagKey(tag.getKey()))
+        return Cast.result(Index.map(mapReducer
+            .osmTag("highway")
             //.aggregateBy(sn -> sn.getEntity().hasTagValue(tag.getKey(), tag.getValue()))
-            .map(OSMEntitySnapshot::getGeometry)
-            .map(Geo::lengthOf)
-            .sum());
+            .map(x -> {
+              double residential = x.getEntity().hasTagValue(tag.getKey(), tag.getValue()) ? 1. : 0.;
+              double len = Geo.lengthOf(x.getGeometryUnclipped());
+              return Pair.of(residential * len, len);
+            })
+            .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
+            x -> x.getLeft() / x.getRight()));
     }
+
+  private static class IdentitySupplier implements SerializableSupplier<Pair<Double, Double>> {
+    @Override
+    public Pair<Double, Double> get() {
+      return Pair.of(0., 0.);
+    }
+  }
+
+  private static class Accumulator implements
+      SerializableBiFunction<Pair<Double, Double>, Pair<Double, Double>, Pair<Double, Double>> {
+    @Override
+    public Pair<Double, Double> apply(Pair<Double, Double> t, Pair<Double, Double> u) {
+      return Pair.of(t.getKey() + u.getKey(), t.getRight() + u.getRight());
+    }
+  }
+
+  private static class Combiner implements SerializableBinaryOperator<Pair<Double, Double>> {
+    @Override
+    public Pair<Double, Double> apply(Pair<Double, Double> t, Pair<Double, Double> u) {
+      return Pair.of(t.getKey() + u.getKey(), t.getRight() + u.getRight());
+    }
+  }
+
 }
