@@ -14,6 +14,7 @@ import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
 import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 
 import java.util.SortedMap;
+import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
 import org.heigit.bigspatialdata.oshdb.util.geometry.Geo;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.TagTranslator;
@@ -50,6 +51,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
 
         // EXAMPLE ONLY - PLEASE INSERT CODE HERE
         return Cast.result(Index.map(mapReducer
+            .osmType(OSMType.WAY)
                 .map(x -> Pair.of(
                         x.getEntity().hasTagValue(tag1.getKey(), tag1.getValue()) ? 1. : 0.,
                         x.getEntity().hasTagValue(tag2.getKey(), tag2.getValue()) ? 1. : 0.))
