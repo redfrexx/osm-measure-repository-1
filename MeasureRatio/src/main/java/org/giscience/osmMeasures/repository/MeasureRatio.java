@@ -54,7 +54,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                         x.getEntity().hasTagValue(tag1.getKey(), tag1.getValue()) ? 1. : 0.,
                         x.getEntity().hasTagValue(tag2.getKey(), tag2.getValue()) ? 1. : 0.))
                 .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
-            x -> x.getLeft() / x.getRight()));
+            x -> (x.getLeft() / x.getRight()) * 100.));
     }
 
     private static class IdentitySupplier implements SerializableSupplier<Pair<Double, Double>> {
