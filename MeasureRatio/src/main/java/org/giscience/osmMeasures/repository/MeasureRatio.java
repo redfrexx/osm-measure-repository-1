@@ -17,6 +17,7 @@ import java.util.SortedMap;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
 import org.heigit.bigspatialdata.oshdb.util.geometry.Geo;
+import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTagInterface;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.TagTranslator;
 
 public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
@@ -44,6 +45,9 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         // Connect to database and create tagTranslator
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
+
+        p.setDefault("value1", "");
+        p.setDefault("value2", "");
 
         // Get tags from key-value pairs
         OSHDBTag tag1 = tagTranslator.getOSHDBTagOf(p.get("key1").toString(), p.get("value1").toString());
