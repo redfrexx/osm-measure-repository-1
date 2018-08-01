@@ -60,7 +60,16 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                         x.getEntity().hasTagValue(tag1.getKey(), tag1.getValue()) ? 1. : 0.,
                         x.getEntity().hasTagValue(tag2.getKey(), tag2.getValue()) ? 1. : 0.))
                 .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
-            x -> (x.getLeft() / x.getRight()) * 100.));
+            x -> {
+            Double ratio = (x.getLeft() / x.getRight()) * 100.;
+            if (ratio.isNaN()) {
+                return -1.;
+            } else if (ratio.isInfinite()) {
+                return -1.;
+            } else {
+                return ratio;
+            }
+        }));
     }
 
     private static class IdentitySupplier implements SerializableSupplier<Pair<Double, Double>> {
