@@ -16,8 +16,11 @@ import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 import java.util.SortedMap;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
+import org.heigit.bigspatialdata.oshdb.util.OSHDBTagKey;
 import org.heigit.bigspatialdata.oshdb.util.geometry.Geo;
+import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTag;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTagInterface;
+import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTagKey;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.TagTranslator;
 
 public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
@@ -46,21 +49,33 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        p.setDefault("value1", "");
-        p.setDefault("value2", "");
-
-        // Get tags from key-value pairs
-        OSHDBTag tag1 = tagTranslator.getOSHDBTagOf(p.get("key1").toString(), p.get("value1").toString());
-        OSHDBTag tag2 = tagTranslator.getOSHDBTagOf(p.get("key2").toString(), p.get("value2").toString());
-
-        // EXAMPLE ONLY - PLEASE INSERT CODE HERE
         return Cast.result(Index.map(mapReducer
             .osmType(OSMType.WAY)
-                .map(x -> Pair.of(
-                        x.getEntity().hasTagValue(tag1.getKey(), tag1.getValue()) ? 1. : 0.,
-                        x.getEntity().hasTagValue(tag2.getKey(), tag2.getValue()) ? 1. : 0.))
-                .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
+            .mapPair(x -> {
+                    // Get tags from key-value pairs
+                    if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
+                        return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
+                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag()).getValue()) ? 1. : 0.;
+                    } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
+                        return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1"))) ? 1. : 0.;
+                    } else {
+                        return 0.;
+                    }
+                },
+                x -> {
+                    // Get tags from key-value pairs
+                    if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
+                        return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
+                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag()).getValue()) ? 1. : 0.;
+                    } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
+                        return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2"))) ? 1. : 0.;
+                    } else {
+                        return 0.;
+                    }
+                })
+            .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
             x -> {
+            if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
             Double ratio = (x.getLeft() / x.getRight()) * 100.;
             if (ratio.isNaN()) {
                 return -1.;
