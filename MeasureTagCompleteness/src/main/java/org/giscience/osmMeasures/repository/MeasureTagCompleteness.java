@@ -49,22 +49,22 @@ public class MeasureTagCompleteness extends MeasureOSHDB<Number, OSMEntitySnapsh
                 .osmType(OSMType.WAY)
                 .mapPair(x -> {
                         // Get tags from key-value pairs
-                        if (p.getOSMTag("Subclass-Key", "Subclass-Value") instanceof OSMTag) {
-                            return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("Subclass-Key", "Subclass-Value")).getKey(),
-                                tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("Subclass-Key", "Subclass-Value")).getValue()) ? 1. : 0.;
-                        } else if (p.getOSMTag("Subclass-Key", "Subclass-Value") instanceof OSMTagKey) {
-                            return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("Subclass-Key", "Subclass-Value"))) ? 1. : 0.;
+                        if (p.getOSMTag("SubclassKey", "SubclassValue") instanceof OSMTag) {
+                            return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("SubclassKey", "SubclassValue")).getKey(),
+                                tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("SubclassKey", "SubclassValue")).getValue()) ? 1. : 0.;
+                        } else if (p.getOSMTag("SubclassKey", "SubclassValue") instanceof OSMTagKey) {
+                            return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("SubclassKey", "SubclassValue"))) ? 1. : 0.;
                         } else {
                             return 0.;
                         }
                     },
                     x -> {
                         // Get tags from key-value pairs
-                        if (p.getOSMTag("Baseclass-Key", "Baseclass-Value") instanceof OSMTag) {
-                            return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("Baseclass-Key", "Baseclass-Value")).getKey(),
-                                tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("Baseclass-Key", "Baseclass-Value")).getValue()) ? 1. : 0.;
-                        } else if (p.getOSMTag("Baseclass-Key", "Baseclass-Value") instanceof OSMTagKey) {
-                            return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("Baseclass-Key", "Baseclass-Value"))) ? 1. : 0.;
+                        if (p.getOSMTag("BaseclassKey", "BaseclassValue") instanceof OSMTag) {
+                            return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("BaseclassKey", "BaseclassValue")).getKey(),
+                                tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("BaseclassKey", "BaseclassValue")).getValue()) ? 1. : 0.;
+                        } else if (p.getOSMTag("BaseclassKey", "BaseclassValue") instanceof OSMTagKey) {
+                            return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("BaseclassKey", "BaseclassValue"))) ? 1. : 0.;
                         } else {
                             return 0.;
                         }
