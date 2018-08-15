@@ -55,7 +55,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                     // Get tags from key-value pairs
                     if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
                         return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
-                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag()).getValue()) ? 1. : 0.;
+                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue()) ? 1. : 0.;
                     } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
                         return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1"))) ? 1. : 0.;
                     } else {
@@ -66,7 +66,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                     // Get tags from key-value pairs
                     if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
                         return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
-                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag()).getValue()) ? 1. : 0.;
+                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue()) ? 1. : 0.;
                     } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
                         return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2"))) ? 1. : 0.;
                     } else {
