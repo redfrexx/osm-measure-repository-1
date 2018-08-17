@@ -75,13 +75,14 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 else
                     return MatchType.MATCHESNONE;
             })
-            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
-            .count(),
+            .sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            //.count(),
             x -> {
-                if (x.get(MatchType.MATCHES2).doubleValue() > 0.) {
-                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue())) * 100.;
+            Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
+                if (totalRoadLength > 0.) {
+                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
                 } else {
-                    return 0.;
+                    return 100.;
                 }}
         ));
     }
