@@ -57,14 +57,14 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
         // Create healthcare tag key
-        OSHDBTagKey healthcareTagKey = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
+        OSHDBTag healthcareTag = tagTranslator.getOSHDBTagOf(p.get("key1").toString(), p.get("value1").toString());
         OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
 
         return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
-                boolean matches1 = entity.hasTagKey(healthcareTagKey.toInt());
+                boolean matches1 = entity.hasTagValue(healthcareTag.getKey(), healthcareTag.getValue());
                 boolean matches2 = entity.hasTagKey(buildingTagKey.toInt());
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -75,13 +75,15 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 else
                     return MatchType.MATCHESNONE;
             })
-            .sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            .count(),
             x -> {
                 if (x.get(MatchType.MATCHES2).doubleValue() > 0.) {
                     return (x.get(MatchType.MATCHESBOTH).doubleValue() / x.get(MatchType.MATCHES2).doubleValue()) * 100.;
                 } else {
                     return 0.;
-                }}
+                }
+        }
             /*
             x -> {
             if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
