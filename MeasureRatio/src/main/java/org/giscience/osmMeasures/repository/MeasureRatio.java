@@ -57,8 +57,8 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
         // Create healthcare tag key
-        OSHDBTagKey healthcareTagKey = tagTranslator.getOSHDBTagKeyOf("addr:housenumber");
-        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf("building");
+        OSHDBTagKey healthcareTagKey = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
+        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
 
         return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
