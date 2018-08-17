@@ -83,11 +83,13 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         switch (type) {
             case "COUNT":
                 result = mapReducer2.count();
+                break;
             case "LENGTH":
                 result = mapReducer2
                     .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
                         return Geo.lengthOf(snapshot.getGeometry());
                     });
+                break;
             case "PERIMETER":
                 result = mapReducer2
                     .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
@@ -96,11 +98,13 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                         else
                             return 0.0;
                     });
+                break;
             case "AREA":
                 result = mapReducer2
                     .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
                         return Geo.areaOf(snapshot.getGeometry());
                     });
+                break;
             default:
                 result = null;
         }
