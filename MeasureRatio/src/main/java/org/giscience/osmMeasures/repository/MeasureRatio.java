@@ -1,5 +1,6 @@
 package org.giscience.osmMeasures.repository;
 
+import java.util.EnumSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
@@ -9,11 +10,13 @@ import org.giscience.utils.geogrid.cells.GridCell;
 import org.heigit.bigspatialdata.oshdb.api.db.OSHDBJdbc;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBiFunction;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBinaryOperator;
+import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableFunction;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableSupplier;
 import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
 import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 
 import java.util.SortedMap;
+import org.heigit.bigspatialdata.oshdb.osm.OSMEntity;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTagKey;
@@ -41,6 +44,10 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         return 30;
     }
 */
+    public enum MatchType {
+        MATCHES1, MATCHES2, MATCHESBOTH, MATCHESNONE
+    }
+
 
     @Override
     public SortedMap<GridCell, Number> compute(MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p) throws Exception {
@@ -49,8 +56,13 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        return Cast.result(Index.map(mapReducer
+        // Create healthcare tag key
+        OSHDBTag healthcareTag = tagTranslator.getOSHDBTagOf("highway", "residential");
+        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf("highway");
+        
+        return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
+            /*
             .mapPair(x -> {
                     // Get tags from key-value pairs
                     if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
@@ -73,7 +85,25 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                         return 0.;
                     }
                 })
-            .reduce(new IdentitySupplier(), new Accumulator(), new Combiner()),
+            .reduce(new IdentitySupplier(), new Accumulator(), new Combiner())
+            */
+            .aggregateBy(f -> {
+                OSMEntity entity = f.getEntity();
+                boolean matches1 = entity.hasTagValue(healthcareTag.getKey(), healthcareTag.getValue() );
+                boolean matches2 = entity.hasTagKey(buildingTagKey.toInt());
+                if (matches1 && matches2)
+                    return MatchType.MATCHESBOTH;
+                else if (matches1)
+                    return MatchType.MATCHES1;
+                else if (matches2)
+                    return MatchType.MATCHES2;
+                else
+                    System.out.println("matches none");
+                    return MatchType.MATCHESNONE;
+            })
+            .sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            x -> (x.get(MatchType.MATCHESBOTH).doubleValue() / x.get(MatchType.MATCHES2).doubleValue()) * 100.
+            /*
             x -> {
             if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
             Double ratio = (x.getLeft() / x.getRight()) * 100.;
@@ -83,8 +113,8 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 return -1.;
             } else {
                 return ratio;
-            }
-        }));
+            }}*/
+        ));
     }
 
     private static class IdentitySupplier implements SerializableSupplier<Pair<Double, Double>> {
