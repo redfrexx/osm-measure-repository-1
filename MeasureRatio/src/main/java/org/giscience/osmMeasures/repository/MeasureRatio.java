@@ -64,7 +64,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         String type = p.get("type").toString().toUpperCase();
 
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
-            .osmType(OSMType.WAY)
+            //.osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
                 boolean matches1 = entity.hasTagKey(key1.toInt());
@@ -110,7 +110,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         }
 
         return Cast.result(Index.reduce(result,
-            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometry())),
             //.count(),
             x -> {
             Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
