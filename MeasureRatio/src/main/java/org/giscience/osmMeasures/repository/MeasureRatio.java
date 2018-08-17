@@ -57,15 +57,15 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
         // Create healthcare tag key
-        OSHDBTag healthcareTag = tagTranslator.getOSHDBTagOf(p.get("key1").toString(), p.get("value1").toString());
-        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
+        OSHDBTagKey key1 = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
+        OSHDBTagKey key2 = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
 
         return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
-                boolean matches1 = entity.hasTagValue(healthcareTag.getKey(), healthcareTag.getValue());
-                boolean matches2 = entity.hasTagKey(buildingTagKey.toInt());
+                boolean matches1 = entity.hasTagKey(key1.toInt());
+                boolean matches2 = entity.hasTagKey(key2.toInt());
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
                 else if (matches1)
@@ -79,44 +79,12 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
             .count(),
             x -> {
                 if (x.get(MatchType.MATCHES2).doubleValue() > 0.) {
-                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / x.get(MatchType.MATCHES2).doubleValue()) * 100.;
+                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue())) * 100.;
                 } else {
                     return 0.;
-                }
-        }
-            /*
-            x -> {
-            if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
-            Double ratio = (x.getLeft() / x.getRight()) * 100.;
-            if (ratio.isNaN()) {
-                return -1.;
-            } else if (ratio.isInfinite()) {
-                return -1.;
-            } else {
-                return ratio;
-            }}*/
+                }}
         ));
     }
 
-    private static class IdentitySupplier implements SerializableSupplier<Pair<Double, Double>> {
-        @Override
-        public Pair<Double, Double> get() {
-            return Pair.of(0., 0.);
-        }
-    }
 
-    private static class Accumulator implements
-        SerializableBiFunction<Pair<Double, Double>, Pair<Double, Double>, Pair<Double, Double>> {
-        @Override
-        public Pair<Double, Double> apply(Pair<Double, Double> t, Pair<Double, Double> u) {
-            return Pair.of(t.getKey() + u.getKey(), t.getRight() + u.getRight());
-        }
-    }
-
-    private static class Combiner implements SerializableBinaryOperator<Pair<Double, Double>> {
-        @Override
-        public Pair<Double, Double> apply(Pair<Double, Double> t, Pair<Double, Double> u) {
-            return Pair.of(t.getKey() + u.getKey(), t.getRight() + u.getRight());
-        }
-    }
 }
