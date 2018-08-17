@@ -59,34 +59,9 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         // Create healthcare tag key
         OSHDBTag healthcareTag = tagTranslator.getOSHDBTagOf("highway", "residential");
         OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf("highway");
-        
+
         return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
-            /*
-            .mapPair(x -> {
-                    // Get tags from key-value pairs
-                    if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
-                        return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
-                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue()) ? 1. : 0.;
-                    } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
-                        return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1"))) ? 1. : 0.;
-                    } else {
-                        return 0.;
-                    }
-                },
-                x -> {
-                    // Get tags from key-value pairs
-                    if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
-                        return x.getEntity().hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
-                            tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getValue()) ? 1. : 0.;
-                    } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
-                        return x.getEntity().hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2"))) ? 1. : 0.;
-                    } else {
-                        return 0.;
-                    }
-                })
-            .reduce(new IdentitySupplier(), new Accumulator(), new Combiner())
-            */
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
                 boolean matches1 = entity.hasTagValue(healthcareTag.getKey(), healthcareTag.getValue() );
@@ -98,22 +73,15 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 else if (matches2)
                     return MatchType.MATCHES2;
                 else
-                    System.out.println("matches none");
                     return MatchType.MATCHESNONE;
             })
             .sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
-            x -> (x.get(MatchType.MATCHESBOTH).doubleValue() / x.get(MatchType.MATCHES2).doubleValue()) * 100.
-            /*
             x -> {
-            if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
-            Double ratio = (x.getLeft() / x.getRight()) * 100.;
-            if (ratio.isNaN()) {
-                return -1.;
-            } else if (ratio.isInfinite()) {
-                return -1.;
-            } else {
-                return ratio;
-            }}*/
+                if (x.get(MatchType.MATCHES2).doubleValue() > 0.) {
+                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / x.get(MatchType.MATCHES2).doubleValue()) * 100.;
+                } else {
+                    return 0.;
+                }}
         ));
     }
 
