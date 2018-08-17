@@ -57,14 +57,14 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
         // Create healthcare tag key
-        OSHDBTag healthcareTag = tagTranslator.getOSHDBTagOf("highway", "residential");
-        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf("highway");
+        OSHDBTagKey healthcareTagKey = tagTranslator.getOSHDBTagKeyOf("addr:housenumber");
+        OSHDBTagKey buildingTagKey = tagTranslator.getOSHDBTagKeyOf("building");
 
         return Cast.result(Index.reduce(mapReducer
             .osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
-                boolean matches1 = entity.hasTagValue(healthcareTag.getKey(), healthcareTag.getValue() );
+                boolean matches1 = entity.hasTagKey(healthcareTagKey.toInt());
                 boolean matches2 = entity.hasTagKey(buildingTagKey.toInt());
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -82,6 +82,17 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 } else {
                     return 0.;
                 }}
+            /*
+            x -> {
+            if (x.getRight().equals(0.) || x.getRight().isInfinite() || x.getRight().isNaN()) return -1.;
+            Double ratio = (x.getLeft() / x.getRight()) * 100.;
+            if (ratio.isNaN()) {
+                return -1.;
+            } else if (ratio.isInfinite()) {
+                return -1.;
+            } else {
+                return ratio;
+            }}*/
         ));
     }
 
