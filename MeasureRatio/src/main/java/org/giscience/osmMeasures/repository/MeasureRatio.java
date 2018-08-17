@@ -1,5 +1,6 @@
 package org.giscience.osmMeasures.repository;
 
+import com.vividsolutions.jts.geom.Polygonal;
 import java.util.EnumSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
@@ -8,6 +9,7 @@ import org.giscience.measures.tools.Cast;
 import org.giscience.measures.tools.Index;
 import org.giscience.utils.geogrid.cells.GridCell;
 import org.heigit.bigspatialdata.oshdb.api.db.OSHDBJdbc;
+import org.heigit.bigspatialdata.oshdb.api.generic.OSHDBCombinedIndex;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBiFunction;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableBinaryOperator;
 import org.heigit.bigspatialdata.oshdb.api.generic.function.SerializableFunction;
@@ -59,8 +61,9 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         // Create healthcare tag key
         OSHDBTagKey key1 = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
         OSHDBTagKey key2 = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
+        String type = p.get("type").toString().toUpperCase();
 
-        return Cast.result(Index.reduce(mapReducer
+        MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
@@ -74,8 +77,36 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                     return MatchType.MATCHES2;
                 else
                     return MatchType.MATCHESNONE;
-            })
-            .sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
+            });
+
+        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
+        switch (type) {
+            case "COUNT":
+                result = mapReducer2.count();
+            case "LENGTH":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.lengthOf(snapshot.getGeometry());
+                    });
+            case "PERIMETER":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        if (snapshot.getGeometry() instanceof Polygonal)
+                            return Geo.lengthOf(snapshot.getGeometry().getBoundary());
+                        else
+                            return 0.0;
+                    });
+            case "AREA":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.areaOf(snapshot.getGeometry());
+                    });
+            default:
+                result = null;
+        }
+
+        return Cast.result(Index.reduce(result,
+            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometryUnclipped())),
             //.count(),
             x -> {
             Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
