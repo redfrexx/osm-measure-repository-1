@@ -54,13 +54,9 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        String tag1String = p.get("tags1").toString();
-        List<List<String>> tags1 = new ArrayList<>();
-        Arrays.asList(tag1String.split(";")).forEach(x -> tags1.add(Arrays.asList(x.split("="))));
-
-        String tag2String = p.get("tags2").toString();
-        List<List<String>> tags2 = new ArrayList<>();
-        Arrays.asList(tag2String.split(";")).forEach(x -> tags2.add(Arrays.asList(x.split("="))));
+        // Parse tags
+        List<List<String>> subTags = parseTags(p.get("subTags").toString());
+        List<List<String>> baseTags = parseTags(p.get("baseTags").toString());
 
         // Get parameters
         String reduceType = p.get("reduceType").toString().toUpperCase();
@@ -94,31 +90,8 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 boolean matches1;
                 boolean matches2;
 
-                matches1 = hasTags(entity, tags1, tagTranslator);
-                matches2 = hasTags(entity, tags2, tagTranslator);
-
-                // Get tags from key-value pairs
-                /*
-                if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
-                    matches1 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
-                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue());
-                } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
-                    matches1 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1")));
-                } else {
-                    matches1 = false;
-                }
-
-
-                // Get tags from key-value pairs
-                if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
-                    matches2 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
-                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getValue());
-                } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
-                    matches2 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2")));
-                } else {
-                    matches2 = false;
-                }
-                */
+                matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                matches2 = hasAnyTag(entity, baseTags, tagTranslator);
 
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -172,7 +145,7 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
         ));
     }
 
-    boolean hasTags(OSMEntity entity, List<List<String>> tags, TagTranslator tagTranslator) {
+    boolean hasAnyTag(OSMEntity entity, List<List<String>> tags, TagTranslator tagTranslator) {
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
@@ -208,6 +181,12 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
             }
         }
         return true;
+    }
+
+    public List<List<String>> parseTags(String rawString) {
+        List<List<String>> tags = new ArrayList<>();
+        Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
+        return tags;
     }
 
 }
