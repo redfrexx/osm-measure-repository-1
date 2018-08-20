@@ -59,8 +59,6 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         // Get parameters
         String reduceType = p.get("reduceType").toString().toUpperCase();
         String osmType = p.get("osmType").toString().toUpperCase();
-        List<Pair<String, String>> tags1 = p.getOSMTag("key1", "value1")
-
 
         // Filter by OSM type
         switch (osmType) {
