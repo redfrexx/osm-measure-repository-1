@@ -56,7 +56,10 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
 
         // Parse tags
         List<List<String>> subTags = parseTags(p.get("subTags").toString());
+        boolean subAll = p.get("subAll").toBoolean();
+
         List<List<String>> baseTags = parseTags(p.get("baseTags").toString());
+        boolean baseAll = p.get("baseAll").toBoolean();
 
         // Get parameters
         String reduceType = p.get("reduceType").toString().toUpperCase();
@@ -90,8 +93,15 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 boolean matches1;
                 boolean matches2;
 
-                matches1 = hasAnyTag(entity, subTags, tagTranslator);
-                matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                if (subAll)
+                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                else
+                    matches1 = hasAllTags(entity, subTags, tagTranslator);
+
+                if (baseAll)
+                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                else
+                    matches2 = hasAllTags(entity, baseTags, tagTranslator);
 
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
