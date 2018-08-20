@@ -61,10 +61,22 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         // Create healthcare tag key
         OSHDBTagKey key1 = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
         OSHDBTagKey key2 = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
-        String type = p.get("type").toString().toUpperCase();
+        String aggregationType = p.get("aggregationType").toString().toUpperCase();
+        String osmType = p.get("osmType").toString().toUpperCase();
 
+        // Filter by OSM type
+        if (osmType.equals("WAY")) {
+            mapReducer = mapReducer.osmType(OSMType.WAY);
+        } else if (osmType.equals("NODE")) {
+            mapReducer = mapReducer.osmType(OSMType.NODE);
+        } else if (osmType.equals("RELATION")) {
+            mapReducer = mapReducer.osmType(OSMType.RELATION);
+        } else {
+            System.out.println("Invalid Option");
+        }
+
+        // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
-            //.osmType(OSMType.WAY)
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
                 boolean matches1 = entity.hasTagKey(key1.toInt());
@@ -80,7 +92,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
             });
 
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
-        switch (type) {
+        switch (aggregationType) {
             case "COUNT":
                 result = mapReducer2.count();
                 break;
