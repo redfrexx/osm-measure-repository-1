@@ -94,14 +94,14 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 boolean matches2;
 
                 if (subAll)
-                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
-                else
                     matches1 = hasAllTags(entity, subTags, tagTranslator);
+                else
+                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
 
                 if (baseAll)
-                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
-                else
                     matches2 = hasAllTags(entity, baseTags, tagTranslator);
+                else
+                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
 
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -159,14 +159,10 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
-                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
-                    return true;
-                }
+                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) return true;
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
-                if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
-                    return true;
-                }
+                if (entity.hasTagValue(tag.getKey(), tag.getValue())) return true;
             } else {
                 System.out.println("Invalid tag.");
             }
@@ -178,14 +174,10 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
-                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
-                    return false;
-                }
+                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) return false;
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
-                if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
-                    return false;
-                }
+                if (!entity.hasTagValue(tag.getKey(), tag.getValue())) return false;
             } else {
                 System.out.println("Invalid tag.");
             }
