@@ -1,7 +1,9 @@
 package org.giscience.osmMeasures.repository;
 
 import com.vividsolutions.jts.geom.Polygonal;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
@@ -80,6 +82,12 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                 System.out.println("Invalid Option");
         }
 
+        Collection<MatchType> zerofill = new LinkedList<>();
+        zerofill.add(MatchType.MATCHES1);
+        zerofill.add(MatchType.MATCHES2);
+        zerofill.add(MatchType.MATCHESBOTH);
+        zerofill.add(MatchType.MATCHESNONE);
+
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
@@ -115,7 +123,9 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
                     return MatchType.MATCHES2;
                 else
                     return MatchType.MATCHESNONE;
-            });
+            }, zerofill);
+
+
 
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
         switch (aggregationType) {
@@ -149,6 +159,7 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
 
         return Cast.result(Index.reduce(result,
             x -> {
+
             Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
                 if (totalRoadLength > 0.) {
                     return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
