@@ -1,8 +1,11 @@
 package org.giscience.osmMeasures.repository;
 
 import com.vividsolutions.jts.geom.Polygonal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import javafx.util.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
 import org.giscience.measures.tools.Cast;
@@ -17,6 +20,8 @@ import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 import java.util.SortedMap;
 import org.heigit.bigspatialdata.oshdb.osm.OSMEntity;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
+import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
+import org.heigit.bigspatialdata.oshdb.util.OSHDBTagKey;
 import org.heigit.bigspatialdata.oshdb.util.geometry.Geo;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTag;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTagKey;
@@ -54,6 +59,8 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         // Get parameters
         String reduceType = p.get("reduceType").toString().toUpperCase();
         String osmType = p.get("osmType").toString().toUpperCase();
+        List<Pair<String, String>> tags1 = p.getOSMTag("key1", "value1")
+
 
         // Filter by OSM type
         switch (osmType) {
@@ -67,7 +74,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 mapReducer = mapReducer.osmType(OSMType.RELATION);
                 break;
             default:
-                System.out.println("Invalid Option");
+                System.out.println("Invalid Option or non given.");
         }
 
         Collection<MatchType> zerofill = new LinkedList<>();
@@ -154,4 +161,39 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }}
         ));
     }
+
+    public boolean hasTags(OSMEntity entity, List<Pair<String, String>> tags, TagTranslator tagTranslator) {
+
+        for (Pair<String, String> elem : tags) {
+            if (elem.getValue().equals("*")) {
+                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.getKey()))) {
+                    return true;
+                }
+            } else {
+                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.getKey(), elem.getValue());
+                if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasAllTags(OSMEntity entity, List<Pair<String, String>> tags, TagTranslator tagTranslator) {
+
+        for (Pair<String, String> elem : tags) {
+            if (elem.getValue().equals("*")) {
+                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.getKey()))) {
+                    return false;
+                }
+            } else {
+                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.getKey(), elem.getValue());
+                if (!entity.hasTagValue(tag.getKey(), tag.getValue())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }
