@@ -10,6 +10,7 @@
         <module>MeasureNumberOfPois</module>
         <module>MeasureResidentialRoads</module>
         <module>MeasureRatio</module>
+        <module>MeasureAttributeCompleteness</module>
     </modules>
     <dependencies>
         <dependency>
