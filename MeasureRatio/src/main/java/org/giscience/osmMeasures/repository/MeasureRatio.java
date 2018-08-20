@@ -58,29 +58,55 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        // Create healthcare tag key
-        OSHDBTagKey key1 = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
-        OSHDBTagKey key2 = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
+        // Get parameters
+        //OSHDBTagKey key1 = tagTranslator.getOSHDBTagKeyOf(p.get("key1").toString());
+        //OSHDBTagKey key2 = tagTranslator.getOSHDBTagKeyOf(p.get("key2").toString());
+
         String aggregationType = p.get("aggregationType").toString().toUpperCase();
         String osmType = p.get("osmType").toString().toUpperCase();
 
         // Filter by OSM type
-        if (osmType.equals("WAY")) {
-            mapReducer = mapReducer.osmType(OSMType.WAY);
-        } else if (osmType.equals("NODE")) {
-            mapReducer = mapReducer.osmType(OSMType.NODE);
-        } else if (osmType.equals("RELATION")) {
-            mapReducer = mapReducer.osmType(OSMType.RELATION);
-        } else {
-            System.out.println("Invalid Option");
+        switch (osmType) {
+            case "WAY":
+                mapReducer = mapReducer.osmType(OSMType.WAY);
+                break;
+            case "NODE":
+                mapReducer = mapReducer.osmType(OSMType.NODE);
+                break;
+            case "RELATION":
+                mapReducer = mapReducer.osmType(OSMType.RELATION);
+                break;
+            default:
+                System.out.println("Invalid Option");
         }
 
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
                 OSMEntity entity = f.getEntity();
-                boolean matches1 = entity.hasTagKey(key1.toInt());
-                boolean matches2 = entity.hasTagKey(key2.toInt());
+                boolean matches1;
+                boolean matches2;
+
+                // Get tags from key-value pairs
+                if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
+                    matches1 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
+                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue());
+                } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
+                    matches1 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1")));
+                } else {
+                    matches1 = false;
+                }
+
+                // Get tags from key-value pairs
+                if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
+                    matches2 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
+                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getValue());
+                } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
+                    matches2 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2")));
+                } else {
+                    matches2 = false;
+                }
+
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
                 else if (matches1)
@@ -122,8 +148,6 @@ public class MeasureRatio extends MeasureOSHDB<Number, OSMEntitySnapshot> {
         }
 
         return Cast.result(Index.reduce(result,
-            //.sum((SerializableFunction<OSMEntitySnapshot, Number>) x -> Geo.lengthOf(x.getGeometry())),
-            //.count(),
             x -> {
             Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
                 if (totalRoadLength > 0.) {
