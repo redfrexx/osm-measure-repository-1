@@ -92,7 +92,6 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         zerofill.add(MatchType.MATCHESBOTH);
         zerofill.add(MatchType.MATCHESNONE);
 
-
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
@@ -129,7 +128,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 if (totalRoadLength > 0.) {
                     return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
                 } else {
-                    return 100.;
+                    return null;
                 }
             }
         ));
@@ -190,6 +189,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                     return true;
             } else {
                 System.out.println("Invalid tag.");
+                return false;
             }
         }
         return false;
@@ -208,6 +208,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                     return false;
             } else {
                 System.out.println("Invalid tag.");
+                return false;
             }
         }
         return true;
