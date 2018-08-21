@@ -119,8 +119,8 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 else
                     return MatchType.MATCHESNONE;
             }, zerofill);
-        
-        /*
+
+
         return Cast.result(Index.reduce(
             computeResult(mapReducer2, reduceType),
             x -> {
@@ -133,7 +133,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }
         ));
-        */
+        /*
         // Reduce
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
         switch (reduceType) {
@@ -174,7 +174,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                     return 100.;
                 }}
         ));
-
+            */
     }
 
     private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
@@ -218,8 +218,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
         return tags;
     }
-
-    /*
+    
     private SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> computeResult(
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer,
         String reduceType)
@@ -249,5 +248,5 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 return null;
         }
     }
-    */
+
 }
