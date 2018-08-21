@@ -92,6 +92,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         zerofill.add(MatchType.MATCHESBOTH);
         zerofill.add(MatchType.MATCHESNONE);
 
+
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
@@ -118,7 +119,8 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 else
                     return MatchType.MATCHESNONE;
             }, zerofill);
-
+        
+        /*
         return Cast.result(Index.reduce(
             computeResult(mapReducer2, reduceType),
             x -> {
@@ -131,6 +133,48 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }
         ));
+        */
+        // Reduce
+        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
+        switch (reduceType) {
+            case "COUNT":
+                result = mapReducer2.count();
+                break;
+            case "LENGTH":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.lengthOf(snapshot.getGeometry());
+                    });
+                break;
+            case "PERIMETER":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        if (snapshot.getGeometry() instanceof Polygonal)
+                            return Geo.lengthOf(snapshot.getGeometry().getBoundary());
+                        else
+                            return 0.0;
+                    });
+                break;
+            case "AREA":
+                result = mapReducer2
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.areaOf(snapshot.getGeometry());
+                    });
+                break;
+            default:
+                result = null;
+        }
+
+        return Cast.result(Index.reduce(result,
+            x -> {
+                Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
+                if (totalRoadLength > 0.) {
+                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
+                } else {
+                    return 100.;
+                }}
+        ));
+
     }
 
     private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
@@ -175,6 +219,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         return tags;
     }
 
+    /*
     private SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> computeResult(
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer,
         String reduceType)
@@ -204,5 +249,5 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 return null;
         }
     }
-
+    */
 }
