@@ -218,7 +218,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
         return tags;
     }
-    
+
     private SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> computeResult(
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer,
         String reduceType)

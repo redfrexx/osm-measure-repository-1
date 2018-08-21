@@ -125,7 +125,7 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 if (totalRoadLength > 0.) {
                     return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
                 } else {
-                    return 100.;
+                    return null;
                 }
             }
         ));
