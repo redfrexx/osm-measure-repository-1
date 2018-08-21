@@ -2,6 +2,7 @@ package org.giscience.osmMeasures.repository;
 
 import com.vividsolutions.jts.geom.Polygonal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,9 +53,17 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
 
     @Override
     public SortedMap<GridCell, Number> compute(MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p) throws Exception {
+
         // Connect to database and create tagTranslator
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
+
+        // Parse tags
+        List<List<String>> subTags = parseTags(p.get("subTags").toString());
+        boolean subAll = p.get("subAll").toBoolean();
+
+        List<List<String>> baseTags = parseTags(p.get("baseTags").toString());
+        boolean baseAll = p.get("baseAll").toBoolean();
 
         // Get parameters
         String reduceType = p.get("reduceType").toString().toUpperCase();
@@ -75,6 +84,8 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 System.out.println("Invalid Option or non given.");
         }
 
+        // Zerofill collection that is passed to aggregateBy to make sure that all aggregated
+        // elements are present in the result
         Collection<MatchType> zerofill = new LinkedList<>();
         zerofill.add(MatchType.MATCHES1);
         zerofill.add(MatchType.MATCHES2);
@@ -87,26 +98,16 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 OSMEntity entity = f.getEntity();
                 boolean matches1;
                 boolean matches2;
-
-                // Get tags from key-value pairs
-                if (p.getOSMTag("key1", "value1") instanceof OSMTag) {
-                    matches1 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getKey(),
-                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key1", "value1")).getValue());
-                } else if (p.getOSMTag("key1", "value1") instanceof OSMTagKey) {
-                    matches1 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key1", "value1")));
-                } else {
-                    matches1 = false;
-                }
-
-                // Get tags from key-value pairs
-                if (p.getOSMTag("key2", "value2") instanceof OSMTag) {
-                    matches2 = entity.hasTagValue(tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getKey(),
-                        tagTranslator.getOSHDBTagOf((OSMTag) p.getOSMTag("key2", "value2")).getValue());
-                } else if (p.getOSMTag("key2", "value2") instanceof OSMTagKey) {
-                    matches2 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf((OSMTagKey) p.getOSMTag("key2", "value2")));
-                } else {
-                    matches2 = false;
-                }
+                // Sub Class
+                if (subAll)
+                    matches1 = hasAllTags(entity, subTags, tagTranslator);
+                else
+                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                // Base class:
+                if (baseAll)
+                    matches2 = hasAllTags(entity, baseTags, tagTranslator);
+                else
+                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
 
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -118,80 +119,90 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                     return MatchType.MATCHESNONE;
             }, zerofill);
 
-        // Reduce
-        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
+        return Cast.result(Index.reduce(
+            computeResult(mapReducer2, reduceType),
+            x -> {
+                Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
+                    .get(MatchType.MATCHESBOTH).doubleValue());
+                if (totalRoadLength > 0.) {
+                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
+                } else {
+                    return 100.;
+                }
+            }
+        ));
+    }
+
+    private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
+        TagTranslator tagTranslator) {
+
+        for (List<String> elem : tags) {
+            if (elem.size() == 1) {
+                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
+                    return true;
+            } else if (elem.size() == 2) {
+                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
+                if (entity.hasTagValue(tag.getKey(), tag.getValue()))
+                    return true;
+            } else {
+                System.out.println("Invalid tag.");
+            }
+        }
+        return false;
+    }
+
+    private boolean hasAllTags(OSMEntity entity, List<List<String>> tags,
+        TagTranslator tagTranslator) {
+
+        for (List<String> elem : tags) {
+            if (elem.size() == 1) {
+                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
+                    return false;
+            } else if (elem.size() == 2) {
+                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
+                if (!entity.hasTagValue(tag.getKey(), tag.getValue()))
+                    return false;
+            } else {
+                System.out.println("Invalid tag.");
+            }
+        }
+        return true;
+    }
+
+    private List<List<String>> parseTags(String rawString) {
+        List<List<String>> tags = new ArrayList<>();
+        Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
+        return tags;
+    }
+
+    private SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> computeResult(
+        MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer,
+        String reduceType)
+        throws Exception {
+
         switch (reduceType) {
+
             case "COUNT":
-                result = mapReducer2.count();
-                break;
+                return mapReducer.count();
             case "LENGTH":
-                result = mapReducer2
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        return Geo.lengthOf(snapshot.getGeometry());
-                    });
-                break;
+                return mapReducer
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>)
+                        snapshot -> Geo.lengthOf(snapshot.getGeometry()));
             case "PERIMETER":
-                result = mapReducer2
+                return mapReducer
                     .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
                         if (snapshot.getGeometry() instanceof Polygonal)
                             return Geo.lengthOf(snapshot.getGeometry().getBoundary());
                         else
                             return 0.0;
                     });
-                break;
             case "AREA":
-                result = mapReducer2
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        return Geo.areaOf(snapshot.getGeometry());
-                    });
-                break;
+                return mapReducer
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>)
+                        snapshot -> Geo.areaOf(snapshot.getGeometry()));
             default:
-                result = null;
+                return null;
         }
-
-        return Cast.result(Index.reduce(result,
-            x -> {
-                Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
-                if (totalRoadLength > 0.) {
-                    return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
-                } else {
-                    return 100.;
-                }}
-        ));
-    }
-
-    public boolean hasTags(OSMEntity entity, List<Pair<String, String>> tags, TagTranslator tagTranslator) {
-
-        for (Pair<String, String> elem : tags) {
-            if (elem.getValue().equals("*")) {
-                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.getKey()))) {
-                    return true;
-                }
-            } else {
-                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.getKey(), elem.getValue());
-                if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public boolean hasAllTags(OSMEntity entity, List<Pair<String, String>> tags, TagTranslator tagTranslator) {
-
-        for (Pair<String, String> elem : tags) {
-            if (elem.getValue().equals("*")) {
-                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.getKey()))) {
-                    return false;
-                }
-            } else {
-                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.getKey(), elem.getValue());
-                if (!entity.hasTagValue(tag.getKey(), tag.getValue())) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
 }

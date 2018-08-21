@@ -48,7 +48,9 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
     }
 
     @Override
-    public SortedMap<GridCell, Number> compute(MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p) throws Exception {
+    public SortedMap<GridCell, Number> compute(
+        MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p)
+        throws Exception {
 
         // Connect to database and create tagTranslator
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
@@ -80,6 +82,8 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 System.out.println("Invalid Option or non given.");
         }
 
+        // Zerofill collection that is passed to aggregateBy to make sure that all aggregated
+        // elements are present in the result
         Collection<MatchType> zerofill = new LinkedList<>();
         zerofill.add(MatchType.MATCHES1);
         zerofill.add(MatchType.MATCHES2);
@@ -92,12 +96,12 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                 OSMEntity entity = f.getEntity();
                 boolean matches1;
                 boolean matches2;
-
+                // Sub Class
                 if (subAll)
                     matches1 = hasAllTags(entity, subTags, tagTranslator);
                 else
                     matches1 = hasAnyTag(entity, subTags, tagTranslator);
-
+                // Base class:
                 if (baseAll)
                     matches2 = hasAllTags(entity, baseTags, tagTranslator);
                 else
@@ -113,56 +117,31 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
                     return MatchType.MATCHESNONE;
             }, zerofill);
 
-        // Reduce
-        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> result;
-        switch (reduceType) {
-            case "COUNT":
-                result = mapReducer2.count();
-                break;
-            case "LENGTH":
-                result = mapReducer2
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        return Geo.lengthOf(snapshot.getGeometry());
-                    });
-                break;
-            case "PERIMETER":
-                result = mapReducer2
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        if (snapshot.getGeometry() instanceof Polygonal)
-                            return Geo.lengthOf(snapshot.getGeometry().getBoundary());
-                        else
-                            return 0.0;
-                    });
-                break;
-            case "AREA":
-                result = mapReducer2
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        return Geo.areaOf(snapshot.getGeometry());
-                    });
-                break;
-            default:
-                result = null;
-        }
-
-        return Cast.result(Index.reduce(result,
+        return Cast.result(Index.reduce(
+            computeResult(mapReducer2, reduceType),
             x -> {
-                Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x.get(MatchType.MATCHESBOTH).doubleValue());
+                Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
+                    .get(MatchType.MATCHESBOTH).doubleValue());
                 if (totalRoadLength > 0.) {
                     return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
                 } else {
                     return 100.;
-                }}
+                }
+            }
         ));
     }
 
-    boolean hasAnyTag(OSMEntity entity, List<List<String>> tags, TagTranslator tagTranslator) {
+    private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
+        TagTranslator tagTranslator) {
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
-                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) return true;
+                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
+                    return true;
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
-                if (entity.hasTagValue(tag.getKey(), tag.getValue())) return true;
+                if (entity.hasTagValue(tag.getKey(), tag.getValue()))
+                    return true;
             } else {
                 System.out.println("Invalid tag.");
             }
@@ -170,14 +149,17 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
         return false;
     }
 
-    boolean hasAllTags(OSMEntity entity, List<List<String>> tags, TagTranslator tagTranslator) {
+    private boolean hasAllTags(OSMEntity entity, List<List<String>> tags,
+        TagTranslator tagTranslator) {
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
-                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) return false;
+                if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
+                    return false;
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
-                if (!entity.hasTagValue(tag.getKey(), tag.getValue())) return false;
+                if (!entity.hasTagValue(tag.getKey(), tag.getValue()))
+                    return false;
             } else {
                 System.out.println("Invalid tag.");
             }
@@ -185,10 +167,42 @@ public class MeasureHighwayNameCompleteness extends MeasureOSHDB<Number, OSMEnti
         return true;
     }
 
-    public List<List<String>> parseTags(String rawString) {
+    private List<List<String>> parseTags(String rawString) {
         List<List<String>> tags = new ArrayList<>();
         Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
         return tags;
+    }
+
+    private SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> computeResult(
+        MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer,
+        String reduceType)
+        throws Exception {
+
+        switch (reduceType) {
+
+            case "COUNT":
+                return mapReducer.count();
+            case "LENGTH":
+                return (SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, Number>) mapReducer
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.lengthOf(snapshot.getGeometry());
+                    });
+            case "PERIMETER":
+                return mapReducer
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        if (snapshot.getGeometry() instanceof Polygonal)
+                            return Geo.lengthOf(snapshot.getGeometry().getBoundary());
+                        else
+                            return 0.0;
+                    });
+            case "AREA":
+                return mapReducer
+                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                        return Geo.areaOf(snapshot.getGeometry());
+                    });
+            default:
+                return null;
+        }
     }
 
 }
