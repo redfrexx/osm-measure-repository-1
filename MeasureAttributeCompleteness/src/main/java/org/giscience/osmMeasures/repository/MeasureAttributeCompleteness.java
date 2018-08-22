@@ -181,9 +181,11 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
+                System.out.println(elem.get(0));
                 if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
                     return true;
             } else if (elem.size() == 2) {
+                System.out.println(elem.get(0) + " " + elem.get(1));
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
                 if (entity.hasTagValue(tag.getKey(), tag.getValue()))
                     return true;
@@ -200,9 +202,11 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
 
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
+                System.out.println(elem.get(0));
                 if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0))))
                     return false;
             } else if (elem.size() == 2) {
+                System.out.println(elem.get(0) + " " + elem.get(1));
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
                 if (!entity.hasTagValue(tag.getKey(), tag.getValue()))
                     return false;
