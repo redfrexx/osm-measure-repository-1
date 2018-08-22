@@ -182,13 +182,11 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
                 if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
-                    System.out.println(elem.get(0));
                     return true;
                 }
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
                 if (entity.hasTagValue(tag.getKey(), tag.getValue()))   {
-                    System.out.println(elem.get(0) +  " " + elem.get(1));
                     return true;
                 }
             } else {
@@ -205,13 +203,11 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         for (List<String> elem : tags) {
             if (elem.size() == 1) {
                 if (!entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
-                    System.out.println(elem.get(0));
                     return false;
                 }
             } else if (elem.size() == 2) {
                 OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
                 if (!entity.hasTagValue(tag.getKey(), tag.getValue())) {
-                    System.out.println(elem.get(0) +  " " + elem.get(1));
                     return false;
                 }
             } else {
@@ -225,6 +221,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
     private List<List<String>> parseTags(String rawString) {
         List<List<String>> tags = new ArrayList<>();
         Arrays.asList(rawString.split(";")).forEach(x -> tags.add(Arrays.asList(x.split("="))));
+        System.out.println(tags);
         return tags;
     }
 
