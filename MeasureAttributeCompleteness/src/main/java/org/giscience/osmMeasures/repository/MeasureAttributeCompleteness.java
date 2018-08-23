@@ -95,31 +95,36 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
-                OSMEntity entity = f.getEntity();
-                boolean matches1;
-                boolean matches2;
-                // Sub Class
-                if (subAll)
-                    matches1 = hasAllTags(entity, subTags, tagTranslator);
-                else
-                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
-                // Base class:
-                if (baseAll)
-                    matches2 = hasAllTags(entity, baseTags, tagTranslator);
-                else
-                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                try {
+                    OSMEntity entity = f.getEntity();
+                    boolean matches1;
+                    boolean matches2;
+                    // Sub Class
+                    if (subAll)
+                        matches1 = hasAllTags(entity, subTags, tagTranslator);
+                    else
+                        matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                    // Base class:
+                    if (baseAll)
+                        matches2 = hasAllTags(entity, baseTags, tagTranslator);
+                    else
+                        matches2 = hasAnyTag(entity, baseTags, tagTranslator);
 
-                if (matches1 && matches2)
-                    return MatchType.MATCHESBOTH;
-                else if (matches1)
-                    return MatchType.MATCHES1;
-                else if (matches2)
-                    return MatchType.MATCHES2;
-                else
+                    if (matches1 && matches2)
+                        return MatchType.MATCHESBOTH;
+                    else if (matches1)
+                        return MatchType.MATCHES1;
+                    else if (matches2)
+                        return MatchType.MATCHES2;
+                    else
+                        return MatchType.MATCHESNONE;
+                } catch (Exception e) {
+                    System.out.println(" ------------------ ERROR --------------------- ");
+                    System.out.println(e);
                     return MatchType.MATCHESNONE;
+                }
             }, zerofill);
 
-        System.out.println("----------- done with aggregation ------------------------");
 
         return Cast.result(Index.reduce(
             computeResult(mapReducer2, reduceType),
@@ -133,6 +138,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                         return null;
                     }
                 } catch (Exception e)  {
+                    System.out.println(" ------------------ ERROR --------------------- ");
                     System.out.println(e);
                     return null;
                 }
@@ -194,28 +200,34 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         String reduceType)
         throws Exception {
 
-        switch (reduceType) {
+        try {
+            switch (reduceType) {
 
-            case "COUNT":
-                return mapReducer.count();
-            case "LENGTH":
-                return mapReducer
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>)
-                        snapshot -> Geo.lengthOf(snapshot.getGeometry()));
-            case "PERIMETER":
-                return mapReducer
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
-                        if (snapshot.getGeometry() instanceof Polygonal)
-                            return Geo.lengthOf(snapshot.getGeometry().getBoundary());
-                        else
-                            return 0.0;
-                    });
-            case "AREA":
-                return mapReducer
-                    .sum((SerializableFunction<OSMEntitySnapshot, Number>)
-                        snapshot -> Geo.areaOf(snapshot.getGeometry()));
-            default:
-                return null;
+                case "COUNT":
+                    return mapReducer.count();
+                case "LENGTH":
+                    return mapReducer
+                        .sum((SerializableFunction<OSMEntitySnapshot, Number>)
+                            snapshot -> Geo.lengthOf(snapshot.getGeometry()));
+                case "PERIMETER":
+                    return mapReducer
+                        .sum((SerializableFunction<OSMEntitySnapshot, Number>) snapshot -> {
+                            if (snapshot.getGeometry() instanceof Polygonal)
+                                return Geo.lengthOf(snapshot.getGeometry().getBoundary());
+                            else
+                                return 0.0;
+                        });
+                case "AREA":
+                    return mapReducer
+                        .sum((SerializableFunction<OSMEntitySnapshot, Number>)
+                            snapshot -> Geo.areaOf(snapshot.getGeometry()));
+                default:
+                    return null;
+            }
+        } catch (Exception e) {
+            System.out.println(" ------------------ ERROR --------------------- ");
+            System.out.println(e);
+            return null;
         }
     }
 
