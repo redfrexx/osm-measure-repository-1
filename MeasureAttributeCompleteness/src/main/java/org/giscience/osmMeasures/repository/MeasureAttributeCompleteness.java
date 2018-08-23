@@ -132,7 +132,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
             mapReducer3 = computeResult(mapReducer2, reduceType);
 
             for (Entry entry : mapReducer3.entrySet()) {
-                System.out.println(entry.getKey() + " - " + entry.getValue())
+                System.out.println(entry.getKey() + " - " + entry.getValue());
             }
 
         } catch(Exception e) {
