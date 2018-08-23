@@ -125,25 +125,34 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }, zerofill);
 
-
-        return Cast.result(Index.reduce(
-            computeResult(mapReducer2, reduceType),
-            x -> {
-                try {
-                    Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
-                        .get(MatchType.MATCHESBOTH).doubleValue());
-                    if (totalRoadLength > 0.) {
-                        return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength) * 100.;
-                    } else {
+        SortedMap<GridCell, Number> result;
+        try {
+            result = Cast.result(Index.reduce(
+                computeResult(mapReducer2, reduceType),
+                x -> {
+                    try {
+                        Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
+                            .get(MatchType.MATCHESBOTH).doubleValue());
+                        if (totalRoadLength > 0.) {
+                            return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
+                                * 100.;
+                        } else {
+                            return null;
+                        }
+                    } catch (Exception e) {
+                        System.out.println(" ------------------ ERROR --------------------- ");
+                        System.out.println(e);
                         return null;
                     }
-                } catch (Exception e)  {
-                    System.out.println(" ------------------ ERROR --------------------- ");
-                    System.out.println(e);
-                    return null;
                 }
-            }
-        ));
+            ));
+        } catch(Exception e) {
+            System.out.println(" ------------------ ERROR --------------------- ");
+            System.out.println(e);
+            result = null;
+        }
+        return result;
+
     }
 
     private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
