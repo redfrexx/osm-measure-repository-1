@@ -131,7 +131,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> data;
         try {
             data = computeResult(mapReducer2, reduceType);
-
+            /*
             TreeMap<GridCell, SortedMap<MatchType, Number>> regroupedIndex = data.entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().getFirstIndex(), e -> {
                     SortedMap<MatchType, Number> m = new TreeMap<>();
@@ -150,7 +150,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                         return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
                             * 100.;
                     } else {
-                        return null;
+                        return 0.;
                     }
                 } catch (Exception e) {
                     System.out.println(" ------------------ ERROR --------------------- ");
@@ -167,7 +167,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
             for (Entry<GridCell, Object> entry : data2.entrySet()) {
                 System.out.println(entry.getKey() + " - " + entry.getValue());
             }
-
+        */
         } catch(Exception e) {
             System.out.println(" ------------------ ERROR --------------------- ");
             System.out.println(e);
@@ -183,12 +183,12 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                         return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
                             * 100.;
                     } else {
-                        return null;
+                        return -1.;
                     }
                 } catch (Exception e) {
                     System.out.println(" ------------------ ERROR --------------------- ");
                     System.out.println(e);
-                    return null;
+                    return -1.;
                 }
             }
         ));
