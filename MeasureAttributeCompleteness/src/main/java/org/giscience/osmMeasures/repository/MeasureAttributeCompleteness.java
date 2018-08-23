@@ -104,12 +104,14 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 if (subAll)
                     matches1 = hasAllTags(entity, subTags, tagTranslator);
                 else
-                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                    //matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                    matches1 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf("highway"));
                 // Base class:
                 if (baseAll)
                     matches2 = hasAllTags(entity, baseTags, tagTranslator);
                 else
-                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                    //matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                    matches2 = entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf("highway"));
 
                 if (matches1 && matches2)
                     return MatchType.MATCHESBOTH;
@@ -125,12 +127,9 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
         try {
             mapReducer3 = computeResult(mapReducer2, reduceType);
-            System.out.println(mapReducer3.keySet());
-            for (OSHDBCombinedIndex<GridCell, MatchType> entry : mapReducer3.keySet()) {
-                //System.out.println(entry.getKey() + " - " + entry.getValue());
-                System.out.println(entry);
+            for (Entry entry : mapReducer3.entrySet()) {
+                System.out.println(entry.getKey() + " - " + entry.getValue());
             }
-
         } catch(Exception e) {
             System.out.println(" ------------------ ERROR --------------------- ");
             System.out.println(e);
@@ -162,18 +161,23 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         TagTranslator tagTranslator) {
 
         for (List<String> elem : tags) {
-            if (elem.size() == 1) {
-                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
-                    return true;
+            try {
+                if (elem.size() == 1) {
+                    if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
+                        return true;
+                    }
+                } else if (elem.size() == 2) {
+                    OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
+                    if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
+                        return true;
+                    }
+                } else {
+                    System.out.println("Invalid tag.");
+                    return false;
                 }
-            } else if (elem.size() == 2) {
-                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
-                if (entity.hasTagValue(tag.getKey(), tag.getValue()))   {
-                    return true;
-                }
-            } else {
-                System.out.println("Invalid tag.");
-                return false;
+            } catch(Exception e) {
+                System.out.println(" ------------------ ERROR --------------------- ");
+
             }
         }
         return false;
