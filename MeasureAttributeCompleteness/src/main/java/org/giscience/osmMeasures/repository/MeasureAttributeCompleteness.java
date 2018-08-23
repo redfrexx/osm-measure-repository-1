@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import javafx.util.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
@@ -129,14 +130,18 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
         try {
             mapReducer3 = computeResult(mapReducer2, reduceType);
+
+            for (Entry entry : mapReducer3.entrySet()) {
+                System.out.println(entry.getKey() + " - " + entry.getValue())
+            }
+
         } catch(Exception e) {
             System.out.println(" ------------------ ERROR --------------------- ");
             System.out.println(e);
             return null;
         }
 
-        SortedMap<GridCell, Number> result;
-        result = Cast.result(Index.reduce(mapReducer3,
+        return Cast.result(Index.reduce(mapReducer3,
             x -> {
                 try {
                     Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
@@ -154,8 +159,6 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }
         ));
-
-        return result;
 
     }
 
