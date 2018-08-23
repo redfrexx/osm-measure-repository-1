@@ -125,32 +125,36 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }, zerofill);
 
-        SortedMap<GridCell, Number> result;
+
+        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
         try {
-            result = Cast.result(Index.reduce(
-                computeResult(mapReducer2, reduceType),
-                x -> {
-                    try {
-                        Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
-                            .get(MatchType.MATCHESBOTH).doubleValue());
-                        if (totalRoadLength > 0.) {
-                            return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
-                                * 100.;
-                        } else {
-                            return null;
-                        }
-                    } catch (Exception e) {
-                        System.out.println(" ------------------ ERROR --------------------- ");
-                        System.out.println(e);
-                        return null;
-                    }
-                }
-            ));
+            mapReducer3 = computeResult(mapReducer2, reduceType);
         } catch(Exception e) {
             System.out.println(" ------------------ ERROR --------------------- ");
             System.out.println(e);
-            result = null;
+            return null;
         }
+
+        SortedMap<GridCell, Number> result;
+        result = Cast.result(Index.reduce(mapReducer3,
+            x -> {
+                try {
+                    Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
+                        .get(MatchType.MATCHESBOTH).doubleValue());
+                    if (totalRoadLength > 0.) {
+                        return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
+                            * 100.;
+                    } else {
+                        return null;
+                    }
+                } catch (Exception e) {
+                    System.out.println(" ------------------ ERROR --------------------- ");
+                    System.out.println(e);
+                    return null;
+                }
+            }
+        ));
+
         return result;
 
     }
