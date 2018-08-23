@@ -127,6 +127,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
         try {
             mapReducer3 = computeResult(mapReducer2, reduceType);
+            System.out.println(mapReducer3.keySet().size());
             for (Entry entry : mapReducer3.entrySet()) {
                 System.out.println(entry.getKey() + " - " + entry.getValue());
             }
