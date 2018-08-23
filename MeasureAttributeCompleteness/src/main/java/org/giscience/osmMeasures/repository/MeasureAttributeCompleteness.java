@@ -1,6 +1,7 @@
 package org.giscience.osmMeasures.repository;
 
 import com.vividsolutions.jts.geom.Polygonal;
+import java.awt.MenuShortcut;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,43 +97,38 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         // Aggregate by attributes
         MapAggregator<OSHDBCombinedIndex<GridCell, MatchType>, OSMEntitySnapshot> mapReducer2 = mapReducer
             .aggregateBy(f -> {
-                try {
-                    OSMEntity entity = f.getEntity();
-                    boolean matches1;
-                    boolean matches2;
-                    // Sub Class
-                    if (subAll)
-                        matches1 = hasAllTags(entity, subTags, tagTranslator);
-                    else
-                        matches1 = hasAnyTag(entity, subTags, tagTranslator);
-                    // Base class:
-                    if (baseAll)
-                        matches2 = hasAllTags(entity, baseTags, tagTranslator);
-                    else
-                        matches2 = hasAnyTag(entity, baseTags, tagTranslator);
+                OSMEntity entity = f.getEntity();
+                boolean matches1;
+                boolean matches2;
+                // Sub Class
+                if (subAll)
+                    matches1 = hasAllTags(entity, subTags, tagTranslator);
+                else
+                    matches1 = hasAnyTag(entity, subTags, tagTranslator);
+                // Base class:
+                if (baseAll)
+                    matches2 = hasAllTags(entity, baseTags, tagTranslator);
+                else
+                    matches2 = hasAnyTag(entity, baseTags, tagTranslator);
 
-                    if (matches1 && matches2)
-                        return MatchType.MATCHESBOTH;
-                    else if (matches1)
-                        return MatchType.MATCHES1;
-                    else if (matches2)
-                        return MatchType.MATCHES2;
-                    else
-                        return MatchType.MATCHESNONE;
-                } catch (Exception e) {
-                    System.out.println(" ------------------ ERROR --------------------- ");
-                    System.out.println(e);
+                if (matches1 && matches2)
+                    return MatchType.MATCHESBOTH;
+                else if (matches1)
+                    return MatchType.MATCHES1;
+                else if (matches2)
+                    return MatchType.MATCHES2;
+                else
                     return MatchType.MATCHESNONE;
-                }
             }, zerofill);
 
 
         SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
         try {
             mapReducer3 = computeResult(mapReducer2, reduceType);
-
-            for (Entry entry : mapReducer3.entrySet()) {
-                System.out.println(entry.getKey() + " - " + entry.getValue());
+            System.out.println(mapReducer3.keySet());
+            for (OSHDBCombinedIndex<GridCell, MatchType> entry : mapReducer3.keySet()) {
+                //System.out.println(entry.getKey() + " - " + entry.getValue());
+                System.out.println(entry);
             }
 
         } catch(Exception e) {
