@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
@@ -21,6 +23,7 @@ import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
 import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 
 import java.util.SortedMap;
+import org.heigit.bigspatialdata.oshdb.index.Grid;
 import org.heigit.bigspatialdata.oshdb.osm.OSMEntity;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
@@ -124,20 +127,31 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
             }, zerofill);
 
 
-        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> mapReducer3;
+        SortedMap<OSHDBCombinedIndex<GridCell, MatchType>, ? extends Number> data;
         try {
-            mapReducer3 = computeResult(mapReducer2, reduceType);
-            System.out.println(mapReducer3.keySet().size());
-            for (Entry entry : mapReducer3.entrySet()) {
+            data = computeResult(mapReducer2, reduceType);
+
+            TreeMap<GridCell, SortedMap<MatchType, Number>> regroupedIndex = data.entrySet()
+                .stream().collect(Collectors.toMap(e -> e.getKey().getFirstIndex(), e -> {
+                    SortedMap<MatchType, Number> m = new TreeMap<>();
+                    m.put(e.getKey().getSecondIndex(), e.getValue());
+                    return m;
+                }, (m1, m2) -> {
+                    m1.putAll(m2);
+                    return m1;
+                }, TreeMap::new));
+
+            for (Entry<GridCell, SortedMap<MatchType, Number>> entry : regroupedIndex.entrySet()) {
                 System.out.println(entry.getKey() + " - " + entry.getValue());
             }
+
         } catch(Exception e) {
             System.out.println(" ------------------ ERROR --------------------- ");
             System.out.println(e);
             return null;
         }
 
-        return Cast.result(Index.reduce(mapReducer3,
+        return Cast.result(Index.reduce(data,
             x -> {
                 try {
                     Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
