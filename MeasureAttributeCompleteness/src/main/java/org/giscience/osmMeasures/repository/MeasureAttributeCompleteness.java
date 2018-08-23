@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
@@ -141,7 +142,29 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                     return m1;
                 }, TreeMap::new));
 
-            for (Entry<GridCell, SortedMap<MatchType, Number>> entry : regroupedIndex.entrySet()) {
+            Function<SortedMap<MatchType, Number>, Number> f = x -> {
+                try {
+                    Double totalRoadLength = (x.get(MatchType.MATCHES2).doubleValue() + x
+                        .get(MatchType.MATCHESBOTH).doubleValue());
+                    if (totalRoadLength > 0.) {
+                        return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
+                            * 100.;
+                    } else {
+                        return null;
+                    }
+                } catch (Exception e) {
+                    System.out.println(" ------------------ ERROR --------------------- ");
+                    System.out.println(e);
+                    return null;
+                }
+            };
+            
+            TreeMap<GridCell, Object> data2 = regroupedIndex.entrySet().stream()
+                .collect(Collectors.toMap(e -> e.getKey(), e -> f.apply(e.getValue()), (v1, v2) -> {
+                    throw new RuntimeException("Duplicate keys never occur.");
+                }, TreeMap::new));
+            
+            for (Entry<GridCell, Object> entry : data2.entrySet()) {
                 System.out.println(entry.getKey() + " - " + entry.getValue());
             }
 
@@ -150,7 +173,7 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
             System.out.println(e);
             return null;
         }
-
+        
         return Cast.result(Index.reduce(data,
             x -> {
                 try {
