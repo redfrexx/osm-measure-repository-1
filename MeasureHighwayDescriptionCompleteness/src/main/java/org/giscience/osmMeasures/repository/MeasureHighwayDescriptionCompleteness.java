@@ -1,15 +1,5 @@
 package org.giscience.osmMeasures.repository;
 
-import org.giscience.measures.rest.measure.MeasureOSHDB;
-import org.giscience.measures.rest.server.OSHDBRequestParameter;
-import org.giscience.measures.tools.Cast;
-import org.giscience.utils.geogrid.cells.GridCell;
-import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
-import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
-import org.giscience.osmMeasures.repository.MeasureAttributeCompleteness;
-
-import java.util.SortedMap;
-
 public class MeasureHighwayDescriptionCompleteness extends MeasureAttributeCompleteness {
 
 /*
