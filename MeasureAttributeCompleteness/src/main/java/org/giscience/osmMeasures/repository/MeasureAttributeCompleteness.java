@@ -53,6 +53,30 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
     }
 */
 
+    public String subtags() {
+        return "";
+    }
+
+    public Boolean subAll() {
+        return true;
+    }
+
+    public String basetags() {
+        return "";
+    }
+
+    public Boolean baseAll() {
+        return true;
+    }
+
+    public String reduceType() {
+        return "";
+    }
+
+    public String osmType() {
+        return "";
+    }
+
     public enum MatchType {
         MATCHES1, MATCHES2, MATCHESBOTH, MATCHESNONE
     }
@@ -64,8 +88,12 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
+        String test = p.get("test").toString();
+        System.out.println(test);
+
         // Parse tags
         List<List<String>> subTags = parseTags(p.get("subTags").toString());
+
         boolean subAll = p.get("subAll").toBoolean();
 
         List<List<String>> baseTags = parseTags(p.get("baseTags").toString());
