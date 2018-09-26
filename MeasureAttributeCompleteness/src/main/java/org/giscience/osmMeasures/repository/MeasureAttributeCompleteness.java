@@ -57,16 +57,16 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         return "";
     }
 
-    public Boolean subAll() {
-        return true;
+    public Integer subAll() {
+        return 99;
     }
 
     public String basetags() {
         return "";
     }
 
-    public Boolean baseAll() {
-        return true;
+    public Integer baseAll() {
+        return 99;
     }
 
     public String reduceType() {
@@ -84,6 +84,13 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
     @Override
     public SortedMap<GridCell, Number> compute(MapAggregator<GridCell, OSMEntitySnapshot> mapReducer, OSHDBRequestParameter p) throws Exception {
 
+        List<List<String>> baseTags;
+        List<List<String>> subTags;
+        boolean baseAll;
+        boolean subAll;
+        String reduceType;
+        String osmType;
+
         // Connect to database and create tagTranslator
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
@@ -95,16 +102,40 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         System.out.println(test);
 
         // Parse tags
-        List<List<String>> subTags = parseTags(p.get("subTags").toString());
+        if (basetags().isEmpty()) {
+            baseTags = parseTags(p.get("baseTags").toString());
+        } else {
+            baseTags = parseTags(basetags());
+        }
+        if (subtags().isEmpty()) {
+            subTags = parseTags(p.get("subTags").toString());
+        } else {
+            subTags = parseTags(subtags());
+        }
 
-        boolean subAll = p.get("subAll").toBoolean();
-
-        List<List<String>> baseTags = parseTags(p.get("baseTags").toString());
-        boolean baseAll = p.get("baseAll").toBoolean();
+        // All or any tag
+        if (baseAll().equals(99)) {
+            baseAll = p.get("baseAll").toBoolean();
+        } else {
+            baseAll = baseAll() == 1;
+        }
+        if (subAll().equals(99)) {
+            subAll = p.get("subAll").toBoolean();
+        } else {
+            subAll = subAll() == 1;
+        }
 
         // Get parameters
-        String reduceType = p.get("reduceType").toString().toUpperCase();
-        String osmType = p.get("osmType").toString().toUpperCase();
+        if (reduceType().isEmpty()) {
+            reduceType = p.get("reduceType").toString().toUpperCase();
+        } else {
+            reduceType = reduceType();
+        }
+        if (osmType().isEmpty()) {
+            osmType = p.get("osmType").toString().toUpperCase();
+        } else {
+            osmType = osmType();
+        }
 
         // Filter by OSM type
         switch (osmType) {
