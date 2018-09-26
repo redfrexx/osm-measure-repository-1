@@ -88,7 +88,10 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        String test = p.get("test").toString();
+        String test = "initValue";
+        if (test.isEmpty()) {
+            test = p.get("test").toString();
+        }
         System.out.println(test);
 
         // Parse tags
