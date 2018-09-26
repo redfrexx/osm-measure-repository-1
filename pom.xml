@@ -11,7 +11,7 @@
         <module>MeasureResidentialRoads</module>
         <module>MeasureRatio</module>
         <module>MeasureAttributeCompleteness</module>
-        <module>MeasureHighwayNameCompleteness</module>
+        <module>MeasureHighwayDescriptionCompleteness</module>
     </modules>
     <dependencies>
         <dependency>
