@@ -12,6 +12,8 @@
         <module>MeasureRatio</module>
         <module>MeasureAttributeCompleteness</module>
         <module>MeasureHighwayDescriptionCompleteness</module>
+        <module>MeasureSourceCompleteness</module>
+        <module>MeasureBuildingAddressCompleteness</module>
     </modules>
     <dependencies>
         <dependency>
