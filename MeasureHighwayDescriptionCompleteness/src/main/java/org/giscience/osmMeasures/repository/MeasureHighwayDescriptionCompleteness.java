@@ -28,17 +28,17 @@ public class MeasureHighwayDescriptionCompleteness extends MeasureAttributeCompl
 
     @Override
     public String defaultSubtags() {
-        return "name=Hisingsleden";
+        return "name;ref";
     }
 
     @Override
     public Integer defaultSubAll() {
-        return 0;
+        return 1;
     }
 
     @Override
     public Integer defaultBaseAll() {
-        return 0;
+        return 1;
     }
 
     @Override
