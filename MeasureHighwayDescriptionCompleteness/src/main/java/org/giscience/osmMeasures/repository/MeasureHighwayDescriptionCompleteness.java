@@ -33,12 +33,12 @@ public class MeasureHighwayDescriptionCompleteness extends MeasureAttributeCompl
 
     @Override
     public Integer defaultSubAll() {
-        return 1;
+        return 0;
     }
 
     @Override
     public Integer defaultBaseAll() {
-        return 1;
+        return 0;
     }
 
     @Override
