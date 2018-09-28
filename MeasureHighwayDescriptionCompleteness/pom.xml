@@ -14,7 +14,7 @@
         <dependency>
             <groupId>com.github.redfrexx.osm-measure-repository-1</groupId>
             <artifactId>MeasureAttributeCompleteness</artifactId>
-            <version>30ce29ffef</version>
+            <version>c3b067fb2c</version>
         </dependency>
     </dependencies>
     <repositories>

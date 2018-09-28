@@ -1,17 +1,11 @@
 package org.giscience.osmMeasures.repository;
 
 import com.vividsolutions.jts.geom.Polygonal;
-import java.awt.MenuShortcut;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import javafx.util.Pair;
 import org.giscience.measures.rest.measure.MeasureOSHDB;
 import org.giscience.measures.rest.server.OSHDBRequestParameter;
 import org.giscience.measures.tools.Cast;
@@ -24,14 +18,10 @@ import org.heigit.bigspatialdata.oshdb.api.mapreducer.MapAggregator;
 import org.heigit.bigspatialdata.oshdb.api.object.OSMEntitySnapshot;
 
 import java.util.SortedMap;
-import org.heigit.bigspatialdata.oshdb.index.Grid;
 import org.heigit.bigspatialdata.oshdb.osm.OSMEntity;
 import org.heigit.bigspatialdata.oshdb.osm.OSMType;
 import org.heigit.bigspatialdata.oshdb.util.OSHDBTag;
-import org.heigit.bigspatialdata.oshdb.util.OSHDBTagKey;
 import org.heigit.bigspatialdata.oshdb.util.geometry.Geo;
-import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTag;
-import org.heigit.bigspatialdata.oshdb.util.tagtranslator.OSMTagKey;
 import org.heigit.bigspatialdata.oshdb.util.tagtranslator.TagTranslator;
 
 public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntitySnapshot> {
@@ -53,27 +43,27 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
     }
 */
 
-    public String subtags() {
+    public String defaultSubtags() {
         return "";
     }
 
-    public Integer subAll() {
+    public Integer defaultSubAll() {
         return 99;
     }
 
-    public String basetags() {
+    public String defaultBasetags() {
         return "";
     }
 
-    public Integer baseAll() {
+    public Integer defaultBaseAll() {
         return 99;
     }
 
-    public String reduceType() {
+    public String defaultReduceType() {
         return "";
     }
 
-    public String osmType() {
+    public String defaultOSMtype() {
         return "";
     }
 
@@ -95,46 +85,42 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
         OSHDBJdbc oshdb = (OSHDBJdbc) this.getOSHDB();
         TagTranslator tagTranslator = new TagTranslator(oshdb.getConnection());
 
-        String test = "initValue";
-        if (test.isEmpty()) {
-            test = p.get("test").toString();
-        }
-        System.out.println(test);
+        // Check input parameters
 
         // Parse tags
-        if (basetags().isEmpty()) {
+        if (defaultBasetags().isEmpty()) {
             baseTags = parseTags(p.get("baseTags").toString());
         } else {
-            baseTags = parseTags(basetags());
+            baseTags = parseTags(defaultBasetags());
         }
-        if (subtags().isEmpty()) {
+        if (defaultSubtags().isEmpty()) {
             subTags = parseTags(p.get("subTags").toString());
         } else {
-            subTags = parseTags(subtags());
+            subTags = parseTags(defaultSubtags());
         }
 
         // All or any tag
-        if (baseAll().equals(99)) {
-            baseAll = p.get("baseAll").toBoolean();
+        if (defaultBaseAll().equals(99)) {
+            baseAll = p.get("defaultBaseAll").toBoolean();
         } else {
-            baseAll = baseAll() == 1;
+            baseAll = defaultBaseAll() == 1;
         }
-        if (subAll().equals(99)) {
-            subAll = p.get("subAll").toBoolean();
+        if (defaultSubAll().equals(99)) {
+            subAll = p.get("defaultSubAll").toBoolean();
         } else {
-            subAll = subAll() == 1;
+            subAll = defaultSubAll() == 1;
         }
 
         // Get parameters
-        if (reduceType().isEmpty()) {
-            reduceType = p.get("reduceType").toString().toUpperCase();
+        if (defaultReduceType().isEmpty()) {
+            reduceType = p.get("defaultReduceType").toString().toUpperCase();
         } else {
-            reduceType = reduceType();
+            reduceType = defaultReduceType();
         }
-        if (osmType().isEmpty()) {
-            osmType = p.get("osmType").toString().toUpperCase();
+        if (defaultOSMtype().isEmpty()) {
+            osmType = p.get("defaultOSMtype").toString().toUpperCase();
         } else {
-            osmType = osmType();
+            osmType = defaultOSMtype();
         }
 
         // Filter by OSM type
@@ -206,7 +192,6 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                 }
             }
         ));
-
     }
 
     private boolean hasAnyTag(OSMEntity entity, List<List<String>> tags,
