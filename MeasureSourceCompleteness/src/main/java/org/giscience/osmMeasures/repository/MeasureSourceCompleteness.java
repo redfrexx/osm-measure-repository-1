@@ -21,7 +21,7 @@ public class MeasureSourceCompleteness extends MeasureAttributeCompleteness {
 
     @Override
     public String defaultBasetags() {
-        return "";
+        return "building";
     }
 
     @Override
