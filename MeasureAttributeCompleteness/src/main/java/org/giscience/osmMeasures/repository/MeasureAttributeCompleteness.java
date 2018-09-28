@@ -183,12 +183,12 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
                         return (x.get(MatchType.MATCHESBOTH).doubleValue() / totalRoadLength)
                             * 100.;
                     } else {
-                        return -1.;
+                        return 0.;
                     }
                 } catch (Exception e) {
                     System.out.println(" ------------------ ERROR --------------------- ");
                     System.out.println(e);
-                    return -1.;
+                    return 0.0;
                 }
             }
         ));

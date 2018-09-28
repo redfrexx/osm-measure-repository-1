@@ -23,7 +23,7 @@ public class MeasureHighwayDescriptionCompleteness extends MeasureAttributeCompl
 
     @Override
     public String defaultBasetags() {
-        return "highway";
+        return "highway=primary";
     }
 
     @Override
