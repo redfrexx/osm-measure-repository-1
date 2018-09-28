@@ -22,32 +22,32 @@ public class MeasureHighwayDescriptionCompleteness extends MeasureAttributeCompl
 */
 
     @Override
-    public String basetags() {
+    public String defaultBasetags() {
         return "highway";
     }
 
     @Override
-    public String subtags() {
+    public String defaultSubtags() {
         return "name=Hisingsleden";
     }
 
     @Override
-    public Integer subAll() {
+    public Integer defaultSubAll() {
         return 0;
     }
 
     @Override
-    public Integer baseAll() {
+    public Integer defaultBaseAll() {
         return 0;
     }
 
     @Override
-    public String reduceType() {
+    public String defaultReduceType() {
         return "LENGTH";
     }
 
     @Override
-    public String osmType() {
+    public String defaultOSMtype() {
         return "WAY";
     }
 
