@@ -101,24 +101,24 @@ public class MeasureAttributeCompleteness extends MeasureOSHDB<Number, OSMEntity
 
         // All or any tag
         if (defaultBaseAll().equals(99)) {
-            baseAll = p.get("defaultBaseAll").toBoolean();
+            baseAll = p.get("baseAll").toBoolean();
         } else {
             baseAll = defaultBaseAll() == 1;
         }
         if (defaultSubAll().equals(99)) {
-            subAll = p.get("defaultSubAll").toBoolean();
+            subAll = p.get("subAll").toBoolean();
         } else {
             subAll = defaultSubAll() == 1;
         }
 
         // Get parameters
         if (defaultReduceType().isEmpty()) {
-            reduceType = p.get("defaultReduceType").toString().toUpperCase();
+            reduceType = p.get("reduceType").toString().toUpperCase();
         } else {
             reduceType = defaultReduceType();
         }
         if (defaultOSMtype().isEmpty()) {
-            osmType = p.get("defaultOSMtype").toString().toUpperCase();
+            osmType = p.get("OSMtype").toString().toUpperCase();
         } else {
             osmType = defaultOSMtype();
         }
