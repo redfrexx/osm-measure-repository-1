@@ -109,7 +109,7 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
         return Cast.result(mapReducer
             .filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
             .map(x -> getTagCoverage(x.getEntity(), subTags, tagTranslator))
-            .average());
+            .count());
     }
 
     private double compute_tag_completeness(
