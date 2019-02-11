@@ -77,15 +77,17 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
             subTags = parse_tags(default_subtags());
         }
 
+        /**
         // Get reduce type
         if (default_reducetype().isEmpty()) {
             reduceType = p.get("reduceType").toString().toUpperCase();
         } else {
             reduceType = default_reducetype();
-        }
+        }**/
 
         // Get all features that match the base tags
         mapReducer = mapReducer.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator));
+
 
         // Filter by OSM type
         if (default_osmtype().isEmpty()) {
