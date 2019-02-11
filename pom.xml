@@ -14,6 +14,8 @@
         <module>MeasureHighwayDescriptionCompleteness</module>
         <module>MeasureSourceCompleteness</module>
         <module>MeasureBuildingAddressCompleteness</module>
+        <module>MeasureTest</module>
+        <module>MeasureAttributeCompletenessByPercentage</module>
     </modules>
     <dependencies>
         <dependency>
