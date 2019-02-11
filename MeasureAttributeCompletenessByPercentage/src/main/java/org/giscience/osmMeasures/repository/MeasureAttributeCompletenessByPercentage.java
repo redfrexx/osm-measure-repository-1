@@ -36,20 +36,19 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
     }
 */
 
-
-    public String defaultSubtags() {
+    public String default_subtags() {
         return "";
     }
 
-    public String defaultBasetags() {
+    public String default_basetags() {
         return "";
     }
 
-    public String defaultReduceType() {
+    public String default_reducetype() {
         return "";
     }
 
-    public String defaultOSMtype() {
+    public String default_osmtype() {
         return "";
     }
 
@@ -67,29 +66,32 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
         // Check input parameters
 
         // Parse tags
-        if (defaultBasetags().isEmpty()) {
+        if (default_basetags().isEmpty()) {
             baseTags = parse_tags(p.get("baseTags").toString());
         } else {
-            baseTags = parse_tags(defaultBasetags());
+            baseTags = parse_tags(default_basetags());
         }
-        if (defaultSubtags().isEmpty()) {
+        if (default_subtags().isEmpty()) {
             subTags = parse_tags(p.get("subTags").toString());
         } else {
-            subTags = parse_tags(defaultSubtags());
+            subTags = parse_tags(default_subtags());
         }
 
         // Get reduce type
-        if (defaultReduceType().isEmpty()) {
+        if (default_reducetype().isEmpty()) {
             reduceType = p.get("reduceType").toString().toUpperCase();
         } else {
-            reduceType = defaultReduceType();
+            reduceType = default_reducetype();
         }
 
+        // Get all features that match the base tags
+        mapReducer = mapReducer.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator));
+
         // Filter by OSM type
-        if (defaultOSMtype().isEmpty()) {
+        if (default_osmtype().isEmpty()) {
             osmType = p.get("OSMtype").toString().toUpperCase();
         } else {
-            osmType = defaultOSMtype();
+            osmType = default_osmtype();
         }
         switch (osmType) {
             case "WAY":
@@ -104,9 +106,6 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
             default:
                 System.out.println("Invalid Option or non given.");
         }
-
-        // Get all features that match the base tags
-        mapReducer = mapReducer.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator));
 
         // Compute percentage of tag completeness for each feature
         return Cast.result(mapReducer
