@@ -85,10 +85,6 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
             reduceType = default_reducetype();
         }**/
 
-        // Get all features that match the base tags
-        mapReducer = mapReducer.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator));
-
-
         // Filter by OSM type
         if (default_osmtype().isEmpty()) {
             osmType = p.get("OSMtype").toString().toUpperCase();
@@ -111,7 +107,8 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
 
         // Compute percentage of tag completeness for each feature
         return Cast.result(mapReducer
-            .map(x -> compute_tag_completeness(x.getEntity(), subTags, tagTranslator))
+            .filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
+            .map(x -> getTagCoverage(x.getEntity(), subTags, tagTranslator))
             .average());
     }
 
@@ -135,6 +132,31 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
         }
         return count / (double) tags.size();
     }
+
+    private static Double getTagCoverage(OSMEntity entity, List<List<String>> tags,
+        TagTranslator tagTranslator) {
+
+        Integer matches = 0;
+        Integer invalidTags = 0;
+
+        for (List<String> elem : tags) {
+            if (elem.size() == 1) {
+                if (entity.hasTagKey(tagTranslator.getOSHDBTagKeyOf(elem.get(0)))) {
+                    matches += 1;
+                }
+            } else if (elem.size() == 2) {
+                OSHDBTag tag = tagTranslator.getOSHDBTagOf(elem.get(0), elem.get(1));
+                if (entity.hasTagValue(tag.getKey(), tag.getValue())) {
+                    matches += 1;
+                }
+            } else {
+                System.out.println("Invalid tag.");
+                invalidTags += 1;
+            }
+        }
+        return matches.doubleValue() / (tags.size() - invalidTags.doubleValue()) * 100.;
+    }
+
 
     private boolean has_all_tags(OSMEntity entity, List<List<String>> tags,
         TagTranslator tagTranslator) {
