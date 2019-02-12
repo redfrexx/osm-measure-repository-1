@@ -83,7 +83,7 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
             reduceType = p.get("reduceType").toString().toUpperCase();
         } else {
             reduceType = default_reducetype();
-        }**/
+        }
 
         // Filter by OSM type
         if (default_osmtype().isEmpty()) {
@@ -104,10 +104,12 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
             default:
                 System.out.println("Invalid Option or non given.");
         }
+        **/
+        System.out.println(mapReducer.count());
 
         // Compute percentage of tag completeness for each feature
         return Cast.result(mapReducer
-            .filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
+            //.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
             //.map(x -> getTagCoverage(x.getEntity(), subTags, tagTranslator))
             .count());
     }
