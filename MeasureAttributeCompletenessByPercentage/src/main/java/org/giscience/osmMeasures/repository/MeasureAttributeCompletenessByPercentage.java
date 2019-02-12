@@ -105,8 +105,12 @@ public class MeasureAttributeCompletenessByPercentage extends MeasureOSHDB<Numbe
                 System.out.println("Invalid Option or non given.");
         }
         **/
-        SortedMap<GridCell, Integer> res = mapReducer.osmTag("building").count();
-
+        SortedMap<GridCell, Integer> res = mapReducer.osmType(OSMType.WAY).osmTag("building").count();
+        SortedMap<GridCell, Number> cast_res = Cast.result(mapReducer
+            //.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
+            //.map(x -> getTagCoverage(x.getEntity(), subTags, tagTranslator))
+            .count());
+        
         // Compute percentage of tag completeness for each feature
         return Cast.result(mapReducer
             //.filter(x -> has_all_tags(x.getEntity(), baseTags, tagTranslator))
