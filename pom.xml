@@ -15,6 +15,7 @@
         <module>MeasureSourceCompleteness</module>
         <module>MeasureBuildingAddressCompleteness</module>
         <module>MeasureAttributeCompletenessByPercentage</module>
+        <module>MeasureAddressOutsideBuilding</module>
     </modules>
     <dependencies>
         <dependency>
